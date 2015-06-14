@@ -432,7 +432,19 @@ var hasTracking = function(details, origin) {
 }
 
 var hasSupercookieTracking = function(details, origin) {
-  return false;
+  /* This function is called before we hear from the localstorage check in supercookie.js.
+   * So, we're missing the scripts which may have supercookies.
+   * Alternatively, we could record the prevalence when we find hi-entropy localstorage items
+   * and check that record to see if the frame hasSupercookieTracking.
+   */
+  var frameData = getFrameData(details.tabId, details.frameId);
+  if (frameData && frameData.superCookie){
+    console.log("hasSupercookieTracking", frameData.superCookie, details.tabId, details.frameId)
+    return true;
+  }else{
+    console.log("No SupercookieTracking", details.tabId, details.frameId)
+    return false;
+  }
 };
 
 const MAX_COOKIE_ENTROPY = 12;

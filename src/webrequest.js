@@ -251,6 +251,20 @@ function recordFrame(tabId, frameId, parentFrameId, frameUrl) {
   };
 }
 
+function recordSuperCookie(sender, msg) {
+  /* TODO: How to keep track of this?
+   * hasSupercookieTracking (in heuristicblocking.js) is called
+   * before this function (i.e. we hear from the injected script).
+   * So we'll miss the scripts with supercookies unless we record
+   * the supercookie info(e.g. calling recordPrevalence)
+   */
+  console.log("Detected high-entropy localStorage item(s) on frame", sender.tab.id, sender.frameId, JSON.stringify(msg));
+  var frameData = getFrameData(sender.tab.id, sender.frameId);
+  if (frameData){
+    frameData.superCookie = true;
+  }
+}
+
 function recordFingerprinting(tabId, msg) {
   // bail if we failed to determine the originating script's URL
   // TODO find and fix where this happens
@@ -537,6 +551,13 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
     } else {
       recordFingerprinting(sender.tab.id, request.fpReport);
     }
+
+  } else if (request.superCookieReport) {
+    recordSuperCookie(sender, request.superCookieReport);
+
+  } else if (request.checkEnabledAndThirdParty) {
+    var pageHost = extractHostFromURL(sender.url);
+    sendResponse(Utils.isPrivacyBadgerEnabled(tabHost) && isThirdParty(pageHost, tabHost));
   }
 
 });
